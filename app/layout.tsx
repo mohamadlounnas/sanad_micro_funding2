@@ -1,9 +1,9 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Alexandria } from 'next/font/google'
 import './globals.css'
+import Navbar from '@/components/Navbar'
 
-const inter = Inter({ subsets: ['latin'] })
-
+const alexandria = Alexandria({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Sanad - Micro-Investment Platform',
   description: 'Connecting investors with small business dreams in Algeria',
@@ -15,10 +15,13 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
+    <html lang="ar" dir="rtl">
+      <body className={alexandria.className}>
         <div className="min-h-screen bg-gray-50">
-          {children}
+          <Navbar />
+          <main>
+            {children}
+          </main>
         </div>
       </body>
     </html>

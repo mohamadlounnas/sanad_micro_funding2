@@ -88,30 +88,19 @@ export default function Dashboard() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-primary-600">ساند</h1>
-              <span className="ml-2 text-gray-500">Sanad</span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-gray-700">مرحباً، {user.name}</span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 text-gray-500 hover:text-gray-700"
-              >
-                <LogOut size={20} />
-                <span>تسجيل الخروج</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-gray-50 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Message */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">مرحباً، {user.name}</h1>
+          <p className="text-gray-600">
+            {user.role === 'INVESTOR' 
+              ? 'اكتشف فرص الاستثمار المثيرة وادير محفظتك الاستثمارية'
+              : 'ادير مشاريعك وابني مستقبلك مع ساند'
+            }
+          </p>
+        </div>
+
         {/* Role-based Dashboard */}
         {user.role === 'INVESTOR' ? (
           <InvestorDashboard />
@@ -133,8 +122,15 @@ function InvestorDashboard() {
   })
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
     // Fetch investor data
-    fetch('/api/investor/dashboard')
+    fetch('/api/investor/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setProjects(data.projects || [])
@@ -148,7 +144,14 @@ function InvestorDashboard() {
 
   // Refresh data when returning to dashboard
   const refreshData = () => {
-    fetch('/api/investor/dashboard')
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    fetch('/api/investor/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setProjects(data.projects || [])
@@ -179,7 +182,7 @@ function InvestorDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <DollarSign className="text-primary-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">إجمالي الاستثمارات</p>
@@ -188,7 +191,7 @@ function InvestorDashboard() {
           </div>
         </div>
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <TrendingUp className="text-secondary-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">الاستثمارات النشطة</p>
@@ -197,7 +200,7 @@ function InvestorDashboard() {
           </div>
         </div>
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <Target className="text-accent-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">إجمالي العوائد</p>
@@ -298,8 +301,15 @@ function EntrepreneurDashboard() {
   })
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
+    if (!token) return
+
     // Fetch entrepreneur data
-    fetch('/api/entrepreneur/dashboard')
+    fetch('/api/entrepreneur/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setProjects(data.projects || [])
@@ -312,7 +322,14 @@ function EntrepreneurDashboard() {
 
   // Refresh data when returning to dashboard
   const refreshData = () => {
-    fetch('/api/entrepreneur/dashboard')
+    const token = localStorage.getItem('token')
+    if (!token) return
+
+    fetch('/api/entrepreneur/dashboard', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
       .then(res => res.json())
       .then(data => {
         setProjects(data.projects || [])
@@ -351,7 +368,7 @@ function EntrepreneurDashboard() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <DollarSign className="text-primary-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">إجمالي التمويل المحصل</p>
@@ -360,7 +377,7 @@ function EntrepreneurDashboard() {
           </div>
         </div>
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <TrendingUp className="text-secondary-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">المشاريع النشطة</p>
@@ -369,7 +386,7 @@ function EntrepreneurDashboard() {
           </div>
         </div>
         <div className="card p-6">
-          <div className="flex items-center">
+          <div className="flex gap-4 items-center">
             <Users className="text-accent-600" size={24} />
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">إجمالي المستثمرين</p>
@@ -509,9 +526,12 @@ function ProjectCard({ project }: { project: any }) {
         </div>
       </div>
       
-      <button className="btn-primary w-full mt-3 text-xs py-2">
-        استثمر الآن
-      </button>
+             <button 
+         onClick={() => window.location.href = `/projects/${project.id}`}
+         className="btn-primary w-full mt-3 text-xs py-2"
+       >
+         عرض التفاصيل
+       </button>
     </div>
   )
 }

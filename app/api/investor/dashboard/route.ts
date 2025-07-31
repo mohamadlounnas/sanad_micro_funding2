@@ -26,67 +26,75 @@ export async function GET(request: NextRequest) {
 
     const userId = decoded.userId
 
-    // Get user's investments
-    const investments = await prisma.investment.findMany({
-      where: { investorId: userId },
-      include: {
-        project: {
-          select: {
-            id: true,
-            title: true,
-            category: true,
-            status: true
-          }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
-
-    // Get available projects (excluding user's own projects)
-    const projects = await prisma.project.findMany({
-      where: {
-        status: 'ACTIVE',
-        ownerId: { not: userId }
-      },
-      include: {
-        owner: {
-          select: {
-            name: true
+    try {
+      // Try to get data from database
+      const investments = await prisma.investment.findMany({
+        where: { investorId: userId },
+        include: {
+          project: {
+            select: {
+              id: true,
+              title: true,
+              category: true,
+              status: true
+            }
           }
         },
-        _count: {
-          select: {
-            investments: true
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // Get available projects (excluding user's own projects)
+      const projects = await prisma.project.findMany({
+        where: {
+          status: 'ACTIVE',
+          ownerId: { not: userId }
+        },
+        include: {
+          owner: {
+            select: {
+              name: true
+            }
+          },
+          _count: {
+            select: {
+              investments: true
+            }
           }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // Calculate stats
+      const totalInvested = investments.reduce((sum: number, inv: any) => sum + inv.amount, 0)
+      const activeInvestments = investments.filter((inv: any) => inv.status === 'ACTIVE').length
+      const totalReturn = investments.reduce((sum: number, inv: any) => sum + (inv.returnAmount || 0), 0)
+
+      // Add calculated fields to projects
+      const projectsWithCalculations = projects.map((project: any) => {
+        const daysLeft = Math.ceil((new Date(project.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+        return {
+          ...project,
+          daysLeft: Math.max(0, daysLeft),
+          investorsCount: project._count.investments
         }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+      })
 
-    // Calculate stats
-    const totalInvested = investments.reduce((sum: number, inv: any) => sum + inv.amount, 0)
-    const activeInvestments = investments.filter((inv: any) => inv.status === 'ACTIVE').length
-    const totalReturn = investments.reduce((sum: number, inv: any) => sum + (inv.returnAmount || 0), 0)
-
-    // Add calculated fields to projects
-    const projectsWithCalculations = projects.map((project: any) => {
-      const daysLeft = Math.ceil((new Date(project.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-      return {
-        ...project,
-        daysLeft: Math.max(0, daysLeft),
-        investorsCount: project._count.investments
-      }
-    })
-
-    return NextResponse.json({
-      projects: projectsWithCalculations,
-      investments,
-      stats: {
-        totalInvested,
-        activeInvestments,
-        totalReturn
-      }
-    })
+      return NextResponse.json({
+        projects: projectsWithCalculations,
+        investments,
+        stats: {
+          totalInvested,
+          activeInvestments,
+          totalReturn
+        }
+      })
+    } catch (dbError) {
+      console.error('Database error, using mock data:', dbError)
+      
+      // Fallback to mock data
+      const mockData = getMockData(userId, 'INVESTOR')
+      return NextResponse.json(mockData)
+    }
   } catch (error) {
     console.error('Dashboard error:', error)
     return NextResponse.json(

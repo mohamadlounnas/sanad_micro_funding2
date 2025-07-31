@@ -7,7 +7,7 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL")
+  url      = "file:./dev.db"
 }
 
 model User {
@@ -51,6 +51,7 @@ model Project {
 model Investment {
   id          String   @id @default(cuid())
   amount      Float
+  equityPercentage Float
   status      String   @default("PENDING") // PENDING, ACTIVE, COMPLETED, CANCELLED
   returnAmount Float?
   createdAt   DateTime @default(now())

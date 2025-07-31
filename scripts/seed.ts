@@ -152,6 +152,7 @@ async function main() {
       create: {
         id: 'investment-1',
         amount: 50000,
+        equityPercentage: (50000 / 1500000) * 25, // 0.83%
         status: 'ACTIVE',
         investorId: users[2].id,
         projectId: projects[0].id
@@ -163,6 +164,7 @@ async function main() {
       create: {
         id: 'investment-2',
         amount: 75000,
+        equityPercentage: (75000 / 800000) * 30, // 2.81%
         status: 'ACTIVE',
         investorId: users[3].id,
         projectId: projects[1].id
@@ -174,6 +176,7 @@ async function main() {
       create: {
         id: 'investment-3',
         amount: 100000,
+        equityPercentage: (100000 / 2000000) * 20, // 1%
         status: 'ACTIVE',
         investorId: users[2].id,
         projectId: projects[2].id
@@ -185,6 +188,7 @@ async function main() {
       create: {
         id: 'investment-4',
         amount: 60000,
+        equityPercentage: (60000 / 1200000) * 35, // 1.75%
         status: 'ACTIVE',
         investorId: users[3].id,
         projectId: projects[3].id

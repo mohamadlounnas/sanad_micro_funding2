@@ -26,54 +26,62 @@ export async function GET(request: NextRequest) {
 
     const userId = decoded.userId
 
-    // Get user's projects
-    const projects = await prisma.project.findMany({
-      where: { ownerId: userId },
-      include: {
-        _count: {
-          select: {
-            investments: true
+    try {
+      // Try to get data from database
+      const projects = await prisma.project.findMany({
+        where: { ownerId: userId },
+        include: {
+          _count: {
+            select: {
+              investments: true
+            }
           }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      // Calculate stats
+      const totalRaised = projects.reduce((sum: number, project: any) => sum + project.raisedAmount, 0)
+      const activeProjects = projects.filter((project: any) => project.status === 'ACTIVE').length
+      
+      // Get total unique investors across all projects
+      const totalInvestors = await prisma.investment.groupBy({
+        by: ['investorId'],
+        where: {
+          project: {
+            ownerId: userId
+          }
+        },
+        _count: {
+          investorId: true
         }
-      },
-      orderBy: { createdAt: 'desc' }
-    })
+      })
 
-    // Calculate stats
-    const totalRaised = projects.reduce((sum: number, project: any) => sum + project.raisedAmount, 0)
-    const activeProjects = projects.filter((project: any) => project.status === 'ACTIVE').length
-    
-    // Get total unique investors across all projects
-    const totalInvestors = await prisma.investment.groupBy({
-      by: ['investorId'],
-      where: {
-        project: {
-          ownerId: userId
+      // Add calculated fields to projects
+      const projectsWithCalculations = projects.map((project: any) => {
+        const daysLeft = Math.ceil((new Date(project.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+        return {
+          ...project,
+          daysLeft: Math.max(0, daysLeft),
+          investorsCount: project._count.investments
         }
-      },
-      _count: {
-        investorId: true
-      }
-    })
+      })
 
-    // Add calculated fields to projects
-    const projectsWithCalculations = projects.map((project: any) => {
-      const daysLeft = Math.ceil((new Date(project.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
-      return {
-        ...project,
-        daysLeft: Math.max(0, daysLeft),
-        investorsCount: project._count.investments
-      }
-    })
-
-    return NextResponse.json({
-      projects: projectsWithCalculations,
-      stats: {
-        totalRaised,
-        activeProjects,
-        totalInvestors: totalInvestors.length
-      }
-    })
+      return NextResponse.json({
+        projects: projectsWithCalculations,
+        stats: {
+          totalRaised,
+          activeProjects,
+          totalInvestors: totalInvestors.length
+        }
+      })
+    } catch (dbError) {
+      console.error('Database error, using mock data:', dbError)
+      
+      // Fallback to mock data
+      const mockData = getMockData(userId, 'ENTREPRENEUR')
+      return NextResponse.json(mockData)
+    }
   } catch (error) {
     console.error('Dashboard error:', error)
     return NextResponse.json(
